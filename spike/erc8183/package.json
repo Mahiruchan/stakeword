@@ -1,0 +1,22 @@
+{
+  "name": "stakeword-erc8183-spike",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end ERC-8183 job lifecycle on Arc testnet — read-only proof works without keys; write flow requires Circle API key + Entity Secret.",
+  "scripts": {
+    "verify": "tsx --env-file-if-exists=.env src/verify.ts",
+    "read-job": "tsx --env-file-if-exists=.env src/read-job.ts",
+    "full-lifecycle": "tsx --env-file=.env src/full-lifecycle.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "^10.3.1",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
