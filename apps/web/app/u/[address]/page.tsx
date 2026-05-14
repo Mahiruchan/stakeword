@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { notFound } from "next/navigation";
 import { Container } from "@/components/Container";
 import { Nav } from "@/components/Nav";
 import { Pill } from "@/components/Pill";
@@ -8,6 +8,8 @@ import { commitments } from "@/lib/db/schema";
 import { ARC_TESTNET_EXPLORER } from "@/lib/chain/constants";
 
 export const dynamic = "force-dynamic";
+
+const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
 interface PageCtx {
   params: Promise<{ address: string }>;
@@ -24,6 +26,7 @@ function fmtStake(baseUnits: string): string {
 
 export default async function PublicProfile({ params }: PageCtx) {
   const { address } = await params;
+  if (!ADDRESS_RE.test(address)) notFound();
   const normalized = address.toLowerCase();
   const db = getDb();
   // Match either case-form against the stored address.

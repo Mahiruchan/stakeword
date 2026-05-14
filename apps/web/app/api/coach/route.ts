@@ -35,26 +35,52 @@ export async function POST(req: Request): Promise<NextResponse> {
     .get();
   if (!commitment) return NextResponse.json({ error: "commitment not found" }, { status: 404 });
 
-  // Charge prepaid balance up front
-  const balance = db
-    .select()
-    .from(coachBalance)
-    .where(eq(coachBalance.sessionId, session.id))
-    .get();
-  const available = balance ? BigInt(balance.balanceBaseUnits) : 0n;
-  if (available < COST_PER_CALL_BASE_UNITS) {
+  // Atomic debit. Serializing within a SQLite transaction prevents the
+  // double-click race (two concurrent POSTs both passing a read-only balance
+  // check, then both decrementing). If two requests arrive at once, one
+  // commits the decrement and the other re-reads and short-circuits.
+  const debited = db.transaction((tx) => {
+    const row = tx
+      .select()
+      .from(coachBalance)
+      .where(eq(coachBalance.sessionId, session.id))
+      .get();
+    const available = row ? BigInt(row.balanceBaseUnits) : 0n;
+    if (available < COST_PER_CALL_BASE_UNITS) return null;
+    const newBalance = available - COST_PER_CALL_BASE_UNITS;
+    const newSpent =
+      (row ? BigInt(row.totalSpentBaseUnits) : 0n) + COST_PER_CALL_BASE_UNITS;
+    const newCallsCount = (row?.callsCount ?? 0) + 1;
+    tx.update(coachBalance)
+      .set({
+        balanceBaseUnits: newBalance.toString(),
+        totalSpentBaseUnits: newSpent.toString(),
+        callsCount: newCallsCount,
+        updatedAt: new Date(),
+      })
+      .where(eq(coachBalance.sessionId, session.id))
+      .run();
+    return { newBalance, newSpent, newCallsCount, prior: available };
+  });
+
+  if (!debited) {
+    const current = db
+      .select()
+      .from(coachBalance)
+      .where(eq(coachBalance.sessionId, session.id))
+      .get();
     return NextResponse.json(
       {
         error: "insufficient_balance",
         message: "Top up the coach balance — calls cost 0.01 USDC each.",
-        currentBalanceBaseUnits: available.toString(),
+        currentBalanceBaseUnits: current?.balanceBaseUnits ?? "0",
         costBaseUnits: COST_PER_CALL_BASE_UNITS.toString(),
       },
       { status: 402 },
     );
   }
 
-  // Load conversation history
+  // Load conversation history (post-debit so it can't influence the charge)
   const history = db
     .select()
     .from(coachMessages)
@@ -71,7 +97,6 @@ export async function POST(req: Request): Promise<NextResponse> {
     .slice(-HISTORY_LIMIT)
     .map((m) => ({ role: m.role, content: m.content }));
 
-  // Persist user message immediately
   db.insert(coachMessages)
     .values({
       id: nanoid(),
@@ -83,26 +108,34 @@ export async function POST(req: Request): Promise<NextResponse> {
     })
     .run();
 
-  // Call the model
-  const reply = await coachChat({
-    criteria: commitment.criteria,
-    history: historyForLlm,
-    userMessage: parsed.data.message,
-  });
+  // Call the model. Refund on failure since we already debited.
+  let reply: string;
+  try {
+    reply = await coachChat({
+      criteria: commitment.criteria,
+      history: historyForLlm,
+      userMessage: parsed.data.message,
+    });
+  } catch (err) {
+    const refunded = debited.prior;
+    db.update(coachBalance)
+      .set({
+        balanceBaseUnits: refunded.toString(),
+        totalSpentBaseUnits: (
+          BigInt(debited.newSpent) - COST_PER_CALL_BASE_UNITS
+        ).toString(),
+        callsCount: debited.newCallsCount - 1,
+        updatedAt: new Date(),
+      })
+      .where(eq(coachBalance.sessionId, session.id))
+      .run();
+    const message = err instanceof Error ? err.message : "coach call failed";
+    return NextResponse.json({ error: "llm_failed", message }, { status: 502 });
+  }
 
-  // Debit + record assistant message atomically (single-threaded sqlite, OK)
-  const newBalance = available - COST_PER_CALL_BASE_UNITS;
-  const newSpent = (balance ? BigInt(balance.totalSpentBaseUnits) : 0n) + COST_PER_CALL_BASE_UNITS;
-  const newCallsCount = (balance?.callsCount ?? 0) + 1;
-  db.update(coachBalance)
-    .set({
-      balanceBaseUnits: newBalance.toString(),
-      totalSpentBaseUnits: newSpent.toString(),
-      callsCount: newCallsCount,
-      updatedAt: new Date(),
-    })
-    .where(eq(coachBalance.sessionId, session.id))
-    .run();
+  const newBalance = debited.newBalance;
+  const newSpent = debited.newSpent;
+  const newCallsCount = debited.newCallsCount;
 
   db.insert(coachMessages)
     .values({

@@ -4,6 +4,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { CoachChat } from "@/components/CoachChat";
 import { Pill } from "@/components/Pill";
 import { ProofSubmissionForm } from "@/components/ProofSubmissionForm";
+import { RetrySettleButton } from "@/components/RetrySettleButton";
 import { ShareCompletion } from "@/components/ShareCompletion";
 import { getDb } from "@/lib/db/client";
 import { commitments, proofs } from "@/lib/db/schema";
@@ -97,6 +98,10 @@ export default async function CommitmentDetail({ params }: PageCtx) {
           stakerAddress={commitment.clientAddress}
           origin={origin}
         />
+      )}
+
+      {commitment.status === "submitted" && (
+        <RetrySettleButton commitmentId={commitment.id} />
       )}
 
       {commitment.status === "funded" && (

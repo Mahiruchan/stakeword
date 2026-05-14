@@ -16,10 +16,11 @@ export async function GET(): Promise<NextResponse> {
       usdc = "0";
     }
   }
+  // Don't expose walletId to the client — it's a server-side identifier the
+  // browser never needs to know. walletAddress is enough for display + faucet.
   return NextResponse.json({
     sessionId: session.id,
     walletAddress: session.walletAddress,
-    walletId: session.walletId,
     usdcBalance: usdc,
     evaluatorAddress: evaluator.address,
   });

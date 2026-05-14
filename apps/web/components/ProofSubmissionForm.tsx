@@ -5,6 +5,23 @@ import { useRouter } from "next/navigation";
 
 type ProofMode = "text" | "url" | "image-base64";
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error("File read failed"));
+    reader.onload = () => {
+      const out = reader.result;
+      if (typeof out !== "string") {
+        reject(new Error("Unexpected FileReader result type"));
+        return;
+      }
+      const comma = out.indexOf(",");
+      resolve(comma === -1 ? out : out.slice(comma + 1));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 interface SubmitResult {
   verdict: "pass" | "fail" | "needs-more";
   reasoning: string;
@@ -36,8 +53,9 @@ export function ProofSubmissionForm({ commitmentId }: Props) {
       return;
     }
     setImageMediaType(file.type as typeof imageMediaType);
-    const buf = await file.arrayBuffer();
-    const b64 = Buffer.from(buf).toString("base64");
+    // Read file as base64 in the browser. `Buffer` is a Node-only API; using
+    // FileReader keeps this working in the client bundle without polyfills.
+    const b64 = await fileToBase64(file);
     setContent(b64);
     setError(null);
   };
@@ -60,6 +78,7 @@ export function ProofSubmissionForm({ commitmentId }: Props) {
       const json = (await res.json()) as SubmitResult & { error?: string; details?: string };
       if (!res.ok && !json.verdict) {
         setError(json.details ?? json.error ?? "Submission failed");
+        return;
       }
       setResult(json);
       // refresh server data on the page (will pick up status change)
