@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StakeWord Design Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@500;600;700&family=Instrument+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #b6ff4d;
+      --primary-hover: #d7ff89;
+      --primary-deep: #355f00;
+      --proof: #52d7ff;
+      --signal: #8b5cf6;
+      --graphite: #10130f;
+      --ink: #171a14;
+      --paper: #f7f3e8;
+      --card: #fffdf5;
+      --mist: #e7ead9;
+      --line: #d7dbc8;
+      --muted: #62685a;
+      --dim: #b9beaa;
+      --success: #34d66b;
+      --warning: #ffd166;
+      --danger: #ff5c5c;
+      --shadow: 0 24px 70px rgba(16, 19, 15, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 80% 0%, rgba(182, 255, 77, 0.22), transparent 34rem),
+        linear-gradient(180deg, var(--paper), #eeeadc 58%, var(--graphite) 58%);
+      color: var(--ink);
+      font-family: "Instrument Sans", sans-serif;
+    }
+
+    .page {
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 26px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 11px;
+      background: var(--ink);
+      color: var(--primary);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 16px;
+      box-shadow: 0 0 0 4px rgba(182, 255, 77, 0.2);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 999px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.04fr) minmax(370px, 0.96fr);
+      gap: 42px;
+      align-items: center;
+      padding: 64px 0 72px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 253, 245, 0.7);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(182, 255, 77, 0.25);
+    }
+
+    h1 {
+      max-width: 680px;
+      margin: 26px 0 22px;
+      font-family: "Archivo Black", sans-serif;
+      font-size: clamp(52px, 8vw, 88px);
+      line-height: 0.9;
+      letter-spacing: -0.025em;
+    }
+
+    .lead {
+      max-width: 620px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.55;
+      font-weight: 550;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 32px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .button-primary {
+      background: var(--primary);
+      color: var(--ink);
+      box-shadow: 0 16px 36px rgba(95, 145, 0, 0.22);
+    }
+
+    .button-secondary {
+      background: rgba(255, 253, 245, 0.72);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 40px;
+      max-width: 620px;
+    }
+
+    .stat {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255, 253, 245, 0.68);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 26px;
+      letter-spacing: -0.015em;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .builder {
+      position: relative;
+      padding: 22px;
+      border: 1px solid rgba(16, 19, 15, 0.12);
+      border-radius: 30px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .builder::before {
+      position: absolute;
+      inset: -14px;
+      z-index: -1;
+      border-radius: 42px;
+      background: linear-gradient(135deg, rgba(182, 255, 77, 0.45), rgba(82, 215, 255, 0.22), transparent 72%);
+      content: "";
+      filter: blur(10px);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel-head h2,
+    .panel-head h3 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.1;
+      letter-spacing: -0.015em;
+    }
+
+    .mono-pill,
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .mono-pill {
+      background: var(--ink);
+      color: var(--primary);
+    }
+
+    .status-pill {
+      background: rgba(182, 255, 77, 0.2);
+      color: var(--primary-deep);
+    }
+
+    .field {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fbf8ef;
+      margin-top: 12px;
+    }
+
+    .field label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .field strong {
+      display: block;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stake {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: 22px;
+      background: var(--graphite);
+      color: var(--paper);
+    }
+
+    .stake small {
+      color: var(--dim);
+      font-weight: 700;
+    }
+
+    .stake strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 34px;
+      letter-spacing: -0.025em;
+    }
+
+    .stake .button {
+      min-height: 46px;
+      padding: 0 18px;
+    }
+
+    .dashboard-band {
+      padding: 72px 0 88px;
+      background: var(--graphite);
+      color: var(--paper);
+    }
+
+    .dashboard-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .dashboard-head h2 {
+      max-width: 620px;
+      margin: 0;
+      font-family: "Archivo Black", sans-serif;
+      font-size: clamp(38px, 5vw, 58px);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+    }
+
+    .dashboard-head p {
+      max-width: 400px;
+      margin: 0;
+      color: var(--dim);
+      line-height: 1.55;
+      font-weight: 550;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      gap: 18px;
+    }
+
+    .dark-card,
+    .light-card {
+      border-radius: 28px;
+      padding: 22px;
+    }
+
+    .dark-card {
+      border: 1px solid rgba(247, 243, 232, 0.12);
+      background: #181d15;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.26);
+    }
+
+    .light-card {
+      background: var(--card);
+      color: var(--ink);
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 15px;
+      border-radius: 18px;
+      background: rgba(247, 243, 232, 0.06);
+      border: 1px solid rgba(247, 243, 232, 0.08);
+    }
+
+    .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(182, 255, 77, 0.13);
+    }
+
+    .step.pending .dot {
+      background: var(--warning);
+      box-shadow: 0 0 0 6px rgba(255, 209, 102, 0.13);
+    }
+
+    .step h4 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .step p {
+      margin: 4px 0 0;
+      color: var(--dim);
+      font-size: 13px;
+    }
+
+    .hash {
+      color: var(--proof);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .side-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .vault-metric {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .vault-metric:first-of-type {
+      border-top: 0;
+    }
+
+    .vault-metric span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .vault-metric strong {
+      font-size: 26px;
+      letter-spacing: -0.015em;
+    }
+
+    .meter {
+      margin-top: 18px;
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(16, 19, 15, 0.1);
+    }
+
+    .meter > div {
+      width: 68%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--proof), var(--primary));
+    }
+
+    .proof-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(82, 215, 255, 0.11);
+      border: 1px solid rgba(82, 215, 255, 0.28);
+    }
+
+    .proof-card h4 {
+      margin: 0;
+      color: var(--paper);
+    }
+
+    .proof-card p {
+      margin: 5px 0 0;
+      color: var(--dim);
+      font-size: 13px;
+    }
+
+    @media (max-width: 920px) {
+      .hero,
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .stats,
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="container">
+      <nav class="nav" aria-label="Primary navigation">
+        <div class="brand">
+          <span class="brand-mark">SW</span>
+          <span>StakeWord</span>
+        </div>
+        <div class="nav-links">
+          <a href="#flow">Flow</a>
+          <a href="#vault">Vault</a>
+          <a href="#proof">Proof</a>
+        </div>
+      </nav>
+
+      <div class="hero">
+        <div>
+          <span class="eyebrow">ERC-8183 self-contract protocol</span>
+          <h1>Stake on shipping. Claude verifies on-chain.</h1>
+          <p class="lead">Turn a hackathon goal into a funded job. You are both client and provider, Claude is the evaluator, and failed stakes reward the people who actually finish.</p>
+          <div class="actions">
+            <a class="button button-primary" href="#builder">Create commitment</a>
+            <a class="button button-secondary" href="DESIGN.md">Read design system</a>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <strong>$2.4K</strong>
+              <span>Target TVL</span>
+            </div>
+            <div class="stat">
+              <strong>8183</strong>
+              <span>Job standard</span>
+            </div>
+            <div class="stat">
+              <strong>0.01</strong>
+              <span>USDC coach call</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="builder" id="builder" aria-label="Commitment builder preview">
+          <div class="panel-head">
+            <div>
+              <h2>Commitment builder</h2>
+              <p style="margin: 7px 0 0; color: var(--muted); font-weight: 600;">Claude turns fuzzy goals into verifiable job terms.</p>
+            </div>
+            <span class="mono-pill">ARC 5042002</span>
+          </div>
+
+          <div class="field">
+            <label>Goal</label>
+            <strong>Ship one working dapp before 5/25</strong>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Provider</label>
+              <strong>self</strong>
+            </div>
+            <div class="field">
+              <label>Evaluator</label>
+              <strong>ClaudeOracle</strong>
+            </div>
+          </div>
+
+          <div class="stake">
+            <div>
+              <small>USDC stake</small>
+              <strong>$20</strong>
+            </div>
+            <a class="button button-primary" href="#flow">Fund job</a>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="dashboard-band" id="flow">
+      <div class="container">
+        <div class="dashboard-head">
+          <h2>Every promise becomes a visible job lifecycle.</h2>
+          <p>The product UI keeps the chain state, evaluator decision, vault economics, and coaching meter in view without turning the app into a block explorer.</p>
+        </div>
+
+        <div class="dashboard">
+          <section class="dark-card">
+            <div class="panel-head">
+              <div>
+                <h3>ERC-8183 Job #42</h3>
+                <p style="margin: 7px 0 0; color: var(--dim);">Open → Funded → Submitted → Completed</p>
+              </div>
+              <span class="status-pill">Funded</span>
+            </div>
+
+            <div class="timeline">
+              <div class="step">
+                <span class="dot"></span>
+                <div>
+                  <h4>createJob(provider=self, evaluator=ClaudeOracle)</h4>
+                  <p>Commitment text generated and anchored as job description.</p>
+                </div>
+                <span class="hash">0x0747...4583</span>
+              </div>
+              <div class="step">
+                <span class="dot"></span>
+                <div>
+                  <h4>fund(jobId)</h4>
+                  <p>USDC stake locked, vault routing enabled for the season.</p>
+                </div>
+                <span class="hash">$20 USDC</span>
+              </div>
+              <div class="step pending">
+                <span class="dot"></span>
+                <div>
+                  <h4>submit(deliverableHash)</h4>
+                  <p>Awaiting proof upload and Claude vision verification.</p>
+                </div>
+                <span class="hash">pending</span>
+              </div>
+              <div class="step pending">
+                <span class="dot"></span>
+                <div>
+                  <h4>complete(reasonHash)</h4>
+                  <p>Claude signs the outcome and completes the job on-chain.</p>
+                </div>
+                <span class="hash">Claude</span>
+              </div>
+            </div>
+
+            <div class="proof-card" id="proof">
+              <div>
+                <h4>Proof uploader</h4>
+                <p>Drop screenshots, repo links, and demo URLs. Claude checks them against the original terms.</p>
+              </div>
+              <span class="mono-pill" style="background: rgba(82, 215, 255, 0.16); color: var(--proof);">vision ready</span>
+            </div>
+          </section>
+
+          <aside class="side-grid">
+            <section class="light-card" id="vault">
+              <div class="panel-head">
+                <h3>Protocol vault</h3>
+                <span class="status-pill">USYC</span>
+              </div>
+              <div class="vault-metric">
+                <span>Pooled USDC</span>
+                <strong>$2,480</strong>
+              </div>
+              <div class="vault-metric">
+                <span>Completer pool</span>
+                <strong>$312</strong>
+              </div>
+              <div class="vault-metric">
+                <span>Season rule</span>
+                <strong>pro rata</strong>
+              </div>
+            </section>
+
+            <section class="light-card">
+              <div class="panel-head">
+                <h3>x402 coach meter</h3>
+                <span class="mono-pill">0.01 USDC</span>
+              </div>
+              <p style="margin: 0; color: var(--muted); font-weight: 600; line-height: 1.5;">Claude nudges, proof checks, and summary reports create metered AI payment activity.</p>
+              <div class="meter" aria-hidden="true"><div></div></div>
+              <div class="vault-metric" style="margin-top: 14px;">
+                <span>Calls today</span>
+                <strong>148</strong>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
