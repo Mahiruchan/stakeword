@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+stakeword.db
+stakeword.db-shm
+stakeword.db-wal
+.env
