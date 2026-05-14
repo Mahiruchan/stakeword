@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+/*
+ * StakeWord design tokens — mirrors DESIGN.md.
+ * Tailwind v4: tokens declared inside @theme are exposed as utilities
+ * (e.g. text-primary, bg-graphite). Tokens prefixed `--font-` map next/font CSS variables.
+ */
+@theme {
+  /* Brand & accent */
+  --color-primary: #b6ff4d;
+  --color-primary-hover: #d7ff89;
+  --color-primary-deep: #355f00;
+  --color-proof: #52d7ff;
+  --color-signal: #8b5cf6;
+
+  /* Surface */
+  --color-graphite: #10130f;
+  --color-graphite-soft: #181d15;
+  --color-ink: #171a14;
+  --color-paper: #f7f3e8;
+  --color-paper-soft: #eeeadc;
+  --color-card: #fffdf5;
+  --color-mist: #e7ead9;
+  --color-line: #d7dbc8;
+
+  /* Text */
+  --color-text: #171a14;
+  --color-text-muted: #62685a;
+  --color-text-inverse: #f7f3e8;
+  --color-text-dim: #b9beaa;
+
+  /* Semantic */
+  --color-success: #34d66b;
+  --color-warning: #ffd166;
+  --color-danger: #ff5c5c;
+  --color-info: #52d7ff;
+
+  /* Typography */
+  --font-display: var(--font-archivo-black), system-ui, sans-serif;
+  --font-sans: var(--font-instrument-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* Radius */
+  --radius-card-sm: 10px;
+  --radius-card-md: 16px;
+  --radius-card-lg: 22px;
+  --radius-card-xl: 28px;
+
+  /* Shadow */
+  --shadow-card: 0 24px 70px rgba(16, 19, 15, 0.16);
+  --shadow-button-primary: 0 16px 36px rgba(95, 145, 0, 0.22);
+  --shadow-dark-card: 0 24px 80px rgba(0, 0, 0, 0.26);
+}
+
+html {
+  background: var(--color-paper);
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(182, 255, 77, 0.22), transparent 34rem),
+    linear-gradient(180deg, var(--color-paper), var(--color-paper-soft) 58%, var(--color-graphite) 58%);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01" on, "cv11" on;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

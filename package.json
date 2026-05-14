@@ -1,0 +1,14 @@
+{
+  "name": "stakeword",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=web",
+    "start": "npm run start --workspace=web",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
