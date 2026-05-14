@@ -93,9 +93,18 @@ Then:
 | USYC | [`0xe9185F0c…b86C`](https://testnet.arcscan.app/address/0xe9185F0c5F296Ed1797AaE4238D26CCaBEadb86C) | yield (vault path, allowlist required) |
 | StakeWordVault | _not yet deployed — `contracts/script/Deploy.s.sol`_ | redistribution |
 
-## Plan & research
+## Documentation
 
+Start here: [`docs/README.md`](./docs/README.md) — index of every doc with one-line descriptions.
+
+Highlights:
+
+- [`docs/JUDGES.md`](./docs/JUDGES.md) — rubric mapping. For each weighted dimension, exactly where in the code or UI to verify the claim.
 - [`docs/PLAN.md`](./docs/PLAN.md) — current development plan (v2)
 - [`docs/RESEARCH.md`](./docs/RESEARCH.md) — competitive landscape + USYC feasibility + spike evidence
+- [`docs/PITCH.md`](./docs/PITCH.md) — 5-section pitch video script with a demo cue sheet
 - [`DESIGN.md`](./DESIGN.md) — full design system (tokens, components, page patterns)
 - [`design-preview.html`](./design-preview.html) — static visual mockup
+- [`apps/web/README.md`](./apps/web/README.md) — Next.js app structure + route map
+- [`contracts/README.md`](./contracts/README.md) — Foundry project + StakeWordVault deploy
+- [`spike/README.md`](./spike/README.md) — standalone proofs-of-concept
