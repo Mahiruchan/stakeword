@@ -8,8 +8,17 @@ import { commitments, proofs } from "@/lib/db/schema";
 import { getEvaluatorWallet } from "@/lib/evaluator";
 import { onChainComplete, onChainReject, onChainSubmit } from "@/lib/actions";
 import { verifyTextEvidence, verifyImageEvidence } from "@/lib/llm/verify";
+import { giveFeedback } from "@/lib/reputation/agent";
 
 export const runtime = "nodejs";
+
+function stakeTier(baseUnits: string): string {
+  const usdc = Number(baseUnits) / 1_000_000;
+  if (usdc < 1) return "tiny";
+  if (usdc < 10) return "small";
+  if (usdc < 50) return "medium";
+  return "large";
+}
 
 const Input = z.discriminatedUnion("contentType", [
   z.object({
@@ -142,6 +151,23 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<NextResponse> {
       .where(eq(commitments.id, id))
       .run();
 
+    // Anchor reputation on ERC-8004 (best-effort — failure here doesn't unsettle the job)
+    let reputationExplorer: string | null = null;
+    if (session.erc8004AgentId) {
+      try {
+        const fb = await giveFeedback({
+          walletId: evaluator.walletId,
+          agentId: BigInt(session.erc8004AgentId),
+          passed: verdict.verdict === "pass",
+          reasonText: verdict.reasoning,
+          tier: stakeTier(commitment.stakeUsdcBaseUnits),
+        });
+        reputationExplorer = fb.explorer;
+      } catch {
+        reputationExplorer = null;
+      }
+    }
+
     return NextResponse.json({
       proofId,
       verdict: verdict.verdict,
@@ -149,6 +175,7 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<NextResponse> {
       onChain: {
         submitTx: submitTx.explorer,
         settleTx: settle.explorer,
+        reputationTx: reputationExplorer,
       },
     });
   } catch (err) {

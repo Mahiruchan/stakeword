@@ -33,6 +33,7 @@ const INITIAL_STEPS: ReadonlyArray<ChainStep> = [
   { key: "setbudget", label: "setBudget — provider declares stake amount", state: "idle" },
   { key: "approve", label: "approve USDC — let escrow pull funds", state: "idle" },
   { key: "fund", label: "fund — lock USDC into the job escrow", state: "idle" },
+  { key: "agent", label: "ERC-8004 register — mint agent identity (first commitment only)", state: "idle" },
 ];
 
 interface StreamEvent {
@@ -146,6 +147,9 @@ export function NewCommitmentForm() {
         txHash: event.data?.txHash,
         explorer: event.data?.explorer,
       });
+    } else if (phase === "skipped") {
+      // ERC-8004 agent register is skipped on subsequent commitments
+      updateStep(key, { state: "done", explorer: undefined });
     }
   };
 

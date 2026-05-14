@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/Button";
 import { CopyAddressButton } from "@/components/CopyAddressButton";
 import { FundEvaluatorButton } from "@/components/FundEvaluatorButton";
 import { Pill } from "@/components/Pill";
+import { ReputationBadge } from "@/components/ReputationBadge";
 import { getDb } from "@/lib/db/client";
 import { commitments } from "@/lib/db/schema";
 import { currentSession } from "@/lib/session";
@@ -177,6 +178,9 @@ export default async function Dashboard() {
           </div>
           <div className="pt-3">
             <FundEvaluatorButton amount="0.5" />
+          </div>
+          <div className="pt-2">
+            <ReputationBadge />
           </div>
         </div>
       </section>

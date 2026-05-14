@@ -5,6 +5,10 @@ export const sessions = sqliteTable("sessions", {
   id: text("id").primaryKey(),
   walletId: text("wallet_id"),
   walletAddress: text("wallet_address"),
+  // ERC-8004 Identity Registry agentId (= ERC-721 tokenId). Null until the user
+  // funds their first commitment, at which point the platform mints them an
+  // agent identity. All subsequent feedback events accrue against this id.
+  erc8004AgentId: text("erc_8004_agent_id"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),

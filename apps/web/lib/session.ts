@@ -28,6 +28,7 @@ export async function currentSession(): Promise<Session> {
     id,
     walletId: wallet.walletId,
     walletAddress: wallet.address,
+    erc8004AgentId: null,
     createdAt: new Date(),
   };
   db.insert(sessions).values(row).run();

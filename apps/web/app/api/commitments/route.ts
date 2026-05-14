@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { currentSession } from "@/lib/session";
 import { getDb } from "@/lib/db/client";
-import { commitments } from "@/lib/db/schema";
+import { commitments, sessions } from "@/lib/db/schema";
 import { getEvaluatorWallet } from "@/lib/evaluator";
 import {
   onChainCreateJob,
@@ -13,6 +13,7 @@ import {
   onChainFund,
   usdcAmountToBaseUnits,
 } from "@/lib/actions";
+import { registerAgent } from "@/lib/reputation/agent";
 
 export const runtime = "nodejs";
 
@@ -35,6 +36,9 @@ interface StreamEvent {
     | "approve:done"
     | "fund:pending"
     | "fund:done"
+    | "agent:pending"
+    | "agent:done"
+    | "agent:skipped"
     | "complete"
     | "error";
   data?: Record<string, unknown>;
@@ -137,6 +141,33 @@ export async function POST(req: Request): Promise<Response> {
           .where(eq(commitments.id, id))
           .run();
         emit({ step: "fund:done", data: fund });
+
+        // First commitment funded → mint ERC-8004 Identity NFT for the user so
+        // future settlements can attach Reputation feedback to a stable agentId.
+        // Best-effort: failure here doesn't roll back the commitment.
+        if (!session.erc8004AgentId) {
+          emit({ step: "agent:pending" });
+          try {
+            const agent = await registerAgent({
+              walletId,
+              walletAddress,
+              sessionShortId: session.id.slice(0, 8),
+            });
+            db.update(sessions)
+              .set({ erc8004AgentId: agent.agentId.toString() })
+              .where(eq(sessions.id, session.id))
+              .run();
+            emit({
+              step: "agent:done",
+              data: { agentId: agent.agentId.toString(), explorer: agent.explorer },
+            });
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            emit({ step: "agent:skipped", data: { reason: message } });
+          }
+        } else {
+          emit({ step: "agent:skipped", data: { reason: "already registered" } });
+        }
 
         emit({ step: "complete", data: { id, jobId: Number(created.jobId) } });
       } catch (err) {
