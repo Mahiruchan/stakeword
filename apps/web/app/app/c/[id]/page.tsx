@@ -1,8 +1,10 @@
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
 import { CoachChat } from "@/components/CoachChat";
 import { Pill } from "@/components/Pill";
 import { ProofSubmissionForm } from "@/components/ProofSubmissionForm";
+import { ShareCompletion } from "@/components/ShareCompletion";
 import { getDb } from "@/lib/db/client";
 import { commitments, proofs } from "@/lib/db/schema";
 import { currentSession } from "@/lib/session";
@@ -46,6 +48,12 @@ export default async function CommitmentDetail({ params }: PageCtx) {
     }
   }
 
+  // Derive origin for share links (works in dev + behind a reverse proxy).
+  const hdrs = await headers();
+  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "localhost:3000";
+  const proto = hdrs.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const origin = `${proto}://${host}`;
+
   return (
     <div className="space-y-8">
       <header>
@@ -80,6 +88,16 @@ export default async function CommitmentDetail({ params }: PageCtx) {
           </a>
         )}
       </header>
+
+      {commitment.status === "completed" && (
+        <ShareCompletion
+          goal={commitment.goal}
+          stakeUsdc={(Number(commitment.stakeUsdcBaseUnits) / 1_000_000).toFixed(2)}
+          jobId={commitment.jobId}
+          stakerAddress={commitment.clientAddress}
+          origin={origin}
+        />
+      )}
 
       {commitment.status === "funded" && (
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
