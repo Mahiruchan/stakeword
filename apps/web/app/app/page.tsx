@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { ButtonLink } from "@/components/Button";
+import { CopyAddressButton } from "@/components/CopyAddressButton";
+import { FundEvaluatorButton } from "@/components/FundEvaluatorButton";
 import { Pill } from "@/components/Pill";
 import { getDb } from "@/lib/db/client";
 import { commitments } from "@/lib/db/schema";
@@ -19,6 +21,87 @@ function shorten(address: string | null | undefined): string {
 function formatStake(baseUnits: string): string {
   const n = Number(baseUnits) / 1_000_000;
   return `$${n.toFixed(2)}`;
+}
+
+interface FirstRunChecklistProps {
+  walletAddress: string | null;
+  usdcBalance: string;
+}
+
+function FirstRunChecklist({ walletAddress, usdcBalance }: FirstRunChecklistProps) {
+  const hasFunds = Number(usdcBalance) > 0;
+  return (
+    <div className="rounded-[24px] border border-dashed border-line bg-card p-8">
+      <h3 className="m-0 font-display text-[22px] tracking-[-0.015em]">
+        Three steps to your first commitment
+      </h3>
+      <ol className="mt-4 grid gap-3 sm:grid-cols-3">
+        <li
+          className={`rounded-[18px] border p-4 ${
+            walletAddress
+              ? "border-primary-deep/20 bg-primary/10"
+              : "border-line bg-paper"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px]">1</span>
+            <strong className="text-[14px]">Wallet</strong>
+            {walletAddress && <span className="text-primary-deep">✓</span>}
+          </div>
+          <p className="mt-2 text-[12px] text-text-muted">
+            Auto-provisioned via Circle Dev-Controlled Wallets on first visit.
+          </p>
+          {walletAddress && (
+            <p className="mt-2 font-mono text-[10px] text-text-muted">
+              {walletAddress.slice(0, 10)}…
+            </p>
+          )}
+        </li>
+        <li
+          className={`rounded-[18px] border p-4 ${
+            hasFunds ? "border-primary-deep/20 bg-primary/10" : "border-line bg-paper"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px]">2</span>
+            <strong className="text-[14px]">Fund</strong>
+            {hasFunds && <span className="text-primary-deep">✓</span>}
+          </div>
+          <p className="mt-2 text-[12px] text-text-muted">
+            Drop testnet USDC onto your wallet. Free, ~30 seconds.
+          </p>
+          {!hasFunds && walletAddress && (
+            <a
+              href="https://faucet.circle.com"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-block rounded-full bg-ink px-3 py-1 text-[11px] font-bold text-paper"
+            >
+              Open Circle faucet →
+            </a>
+          )}
+        </li>
+        <li className="rounded-[18px] border border-line bg-paper p-4">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px]">3</span>
+            <strong className="text-[14px]">Stake</strong>
+          </div>
+          <p className="mt-2 text-[12px] text-text-muted">
+            Pick a measurable goal. Lock USDC. Claude evaluates your proof when you
+            submit it.
+          </p>
+          {hasFunds && (
+            <Link
+              href="/app/new"
+              className="mt-2 inline-block rounded-full bg-primary px-3 py-1 text-[11px] font-bold text-ink"
+            >
+              Create commitment →
+            </Link>
+          )}
+        </li>
+      </ol>
+    </div>
+  );
 }
 
 export default async function Dashboard() {
@@ -61,16 +144,21 @@ export default async function Dashboard() {
           </div>
         </div>
         <div className="space-y-3 rounded-[22px] bg-mist p-5 font-mono text-[13px]">
-          <div className="flex justify-between">
+          <div className="flex items-center justify-between gap-3">
             <span className="text-text-muted">Wallet</span>
-            <a
-              className="font-bold underline-offset-4 hover:underline"
-              href={`${ARC_TESTNET_EXPLORER}/address/${session.walletAddress ?? ""}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {shorten(session.walletAddress)}
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                className="font-bold underline-offset-4 hover:underline"
+                href={`${ARC_TESTNET_EXPLORER}/address/${session.walletAddress ?? ""}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {shorten(session.walletAddress)}
+              </a>
+              {session.walletAddress && (
+                <CopyAddressButton address={session.walletAddress} label="Copy" />
+              )}
+            </div>
           </div>
           <div className="flex justify-between">
             <span className="text-text-muted">USDC balance</span>
@@ -87,16 +175,9 @@ export default async function Dashboard() {
               {shorten(evaluator.address)}
             </a>
           </div>
-          <form action="/api/fund-evaluator" method="post" className="pt-3">
-            <input type="hidden" name="amount" value="0.5" />
-            <button
-              type="submit"
-              formAction="/api/fund-evaluator?amount=0.5"
-              className="w-full rounded-full border border-line bg-card px-3 py-2 text-[12px] font-bold hover:bg-paper"
-            >
-              Send 0.5 USDC for evaluator gas
-            </button>
-          </form>
+          <div className="pt-3">
+            <FundEvaluatorButton amount="0.5" />
+          </div>
         </div>
       </section>
 
@@ -109,10 +190,10 @@ export default async function Dashboard() {
         </header>
 
         {rows.length === 0 ? (
-          <p className="rounded-[22px] border border-dashed border-line p-8 text-center text-text-muted">
-            Nothing here yet. Create your first commitment to lock USDC against a
-            real deadline.
-          </p>
+          <FirstRunChecklist
+            walletAddress={session.walletAddress ?? null}
+            usdcBalance={balance}
+          />
         ) : (
           <ul className="grid gap-3">
             {rows.map((c) => (

@@ -67,7 +67,7 @@ export default function Home() {
                 people who actually finish.
               </p>
               <div className="mt-8 flex flex-wrap gap-[14px]">
-                <ButtonLink href="#builder">Create commitment</ButtonLink>
+                <ButtonLink href="/app">Open the app</ButtonLink>
                 <ButtonLink
                   href="https://github.com/CUinspace233/stakeword/blob/main/DESIGN.md"
                   variant="secondary"
@@ -88,7 +88,7 @@ export default function Home() {
               provider="self"
               evaluator="ClaudeOracle"
               stakeUsdc="$20"
-              fundHref="#flow"
+              fundHref="/app/new"
             />
           </div>
         </Container>
