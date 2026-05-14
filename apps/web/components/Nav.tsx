@@ -9,7 +9,7 @@ interface NavLink {
 
 const LINKS: ReadonlyArray<NavLink> = [
   { href: "/app", label: "App" },
-  { href: "/app/new", label: "New" },
+  { href: "/leaderboard", label: "Leaderboard" },
   {
     href: "https://github.com/CUinspace233/stakeword/blob/main/DESIGN.md",
     label: "Design",
