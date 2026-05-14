@@ -1,0 +1,15 @@
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+libs = ["lib"]
+solc = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+gas_reports = ["StakeWordVault"]
+
+[etherscan]
+arc-testnet = { key = "${ARCSCAN_API_KEY}", url = "https://testnet.arcscan.app/api" }
+
+[rpc_endpoints]
+arc-testnet = "${ARC_RPC_URL}"

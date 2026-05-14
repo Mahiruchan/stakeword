@@ -80,7 +80,46 @@ export const systemState = sqliteTable("system_state", {
   value: text("value").notNull(),
 });
 
+/**
+ * x402-style prepaid coach balance.
+ *
+ * Production x402 flow: each AI call returns 402, client signs an EIP-3009
+ * authorization, server settles via facilitator. We compress that into one real
+ * tx per session — user tops up, internal debit per call. Same economic model,
+ * better UX. The real x402 dance ships once Circle Gateway publishes a
+ * facilitator on Arc.
+ */
+export const coachBalance = sqliteTable("coach_balance", {
+  sessionId: text("session_id")
+    .primaryKey()
+    .references(() => sessions.id),
+  /** Remaining prepaid USDC in base units (6 decimals). */
+  balanceBaseUnits: text("balance_base_units").notNull().default("0"),
+  /** Cumulative spent since session start. */
+  totalSpentBaseUnits: text("total_spent_base_units").notNull().default("0"),
+  callsCount: integer("calls_count").notNull().default(0),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export const coachMessages = sqliteTable("coach_messages", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id")
+    .notNull()
+    .references(() => sessions.id),
+  commitmentId: text("commitment_id").references(() => commitments.id),
+  role: text("role").$type<"user" | "assistant">().notNull(),
+  content: text("content").notNull(),
+  costBaseUnits: text("cost_base_units").notNull().default("0"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export type Session = typeof sessions.$inferSelect;
 export type Commitment = typeof commitments.$inferSelect;
 export type CommitmentInsert = typeof commitments.$inferInsert;
 export type Proof = typeof proofs.$inferSelect;
+export type CoachBalance = typeof coachBalance.$inferSelect;
+export type CoachMessage = typeof coachMessages.$inferSelect;

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
+import { CoachChat } from "@/components/CoachChat";
 import { Pill } from "@/components/Pill";
 import { ProofSubmissionForm } from "@/components/ProofSubmissionForm";
 import { getDb } from "@/lib/db/client";
@@ -81,16 +82,19 @@ export default async function CommitmentDetail({ params }: PageCtx) {
       </header>
 
       {commitment.status === "funded" && (
-        <section className="rounded-[28px] border border-line bg-card p-6">
-          <h2 className="m-0 text-[22px] font-bold tracking-[-0.015em]">Submit proof</h2>
-          <p className="mb-5 mt-1 text-[14px] text-text-muted">
-            Claude evaluates against your criteria. If she says <strong>pass</strong>,
-            we submit + complete on-chain. If <strong>fail</strong>, the job is rejected.
-            <strong> needs-more</strong> means try again with stronger evidence — no
-            on-chain action yet.
-          </p>
-          <ProofSubmissionForm commitmentId={commitment.id} />
-        </section>
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+          <section className="rounded-[28px] border border-line bg-card p-6">
+            <h2 className="m-0 text-[22px] font-bold tracking-[-0.015em]">Submit proof</h2>
+            <p className="mb-5 mt-1 text-[14px] text-text-muted">
+              Claude evaluates against your criteria. If she says <strong>pass</strong>,
+              we submit + complete on-chain. If <strong>fail</strong>, the job is
+              rejected. <strong>needs-more</strong> means try again with stronger
+              evidence — no on-chain action yet.
+            </p>
+            <ProofSubmissionForm commitmentId={commitment.id} />
+          </section>
+          <CoachChat commitmentId={commitment.id} />
+        </div>
       )}
 
       <section>

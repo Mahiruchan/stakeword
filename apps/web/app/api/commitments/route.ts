@@ -20,16 +20,31 @@ const CreateInput = z.object({
   goal: z.string().min(3).max(500),
   criteria: z.string().min(3).max(1000),
   stakeUsdc: z.string().regex(/^\d+(\.\d{1,6})?$/),
-  /** Unix seconds for the deadline. */
   expiresAt: z.number().int().positive(),
 });
 
-export async function POST(req: Request): Promise<NextResponse> {
+interface StreamEvent {
+  step:
+    | "validated"
+    | "draft-saved"
+    | "createjob:pending"
+    | "createjob:done"
+    | "setbudget:pending"
+    | "setbudget:done"
+    | "approve:pending"
+    | "approve:done"
+    | "fund:pending"
+    | "fund:done"
+    | "complete"
+    | "error";
+  data?: Record<string, unknown>;
+}
+
+export async function POST(req: Request): Promise<Response> {
   const session = await currentSession();
   if (!session.walletId || !session.walletAddress) {
     return NextResponse.json({ error: "session has no wallet" }, { status: 500 });
   }
-
   const body = await req.json().catch(() => null);
   const parsed = CreateInput.safeParse(body);
   if (!parsed.success) {
@@ -44,71 +59,102 @@ export async function POST(req: Request): Promise<NextResponse> {
   const db = getDb();
   const id = nanoid();
   const stakeBase = usdcAmountToBaseUnits(input.stakeUsdc);
+  const walletId = session.walletId;
+  const walletAddress = session.walletAddress as `0x${string}`;
 
-  db.insert(commitments)
-    .values({
-      id,
-      sessionId: session.id,
-      goal: input.goal,
-      criteria: input.criteria,
-      stakeUsdcBaseUnits: stakeBase.toString(),
-      status: "draft",
-      expiresAt: input.expiresAt,
-      clientWalletId: session.walletId,
-      clientAddress: session.walletAddress,
-      // MVP: provider is the same wallet as client (self-contract).
-      providerWalletId: session.walletId,
-      providerAddress: session.walletAddress,
-    })
-    .run();
+  // NDJSON stream — each line is a self-contained event.
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const enc = new TextEncoder();
+      const emit = (e: StreamEvent): void => {
+        controller.enqueue(enc.encode(JSON.stringify(e) + "\n"));
+      };
 
-  // Push it on-chain. Each step is best-effort; if a later step fails we leave
-  // the DB row with whatever progress we made so a retry can resume.
-  try {
-    const created = await onChainCreateJob({
-      clientWalletId: session.walletId,
-      clientAddress: session.walletAddress as `0x${string}`,
-      providerAddress: session.walletAddress as `0x${string}`,
-      evaluatorAddress: evaluator.address,
-      expiredAtUnix: input.expiresAt,
-      description: `${input.goal}\n\nCriteria: ${input.criteria}`,
-    });
-    db.update(commitments)
-      .set({
-        jobId: Number(created.jobId),
-        status: "open",
-        updatedAt: new Date(),
-      })
-      .where(eq(commitments.id, id))
-      .run();
+      try {
+        emit({ step: "validated", data: { id } });
 
-    await onChainSetBudget({
-      providerWalletId: session.walletId,
-      jobId: created.jobId,
-      amountUsdcBaseUnits: stakeBase,
-    });
-    await onChainApproveUsdc({
-      clientWalletId: session.walletId,
-      amountUsdcBaseUnits: stakeBase,
-    });
-    await onChainFund({
-      clientWalletId: session.walletId,
-      jobId: created.jobId,
-    });
+        db.insert(commitments)
+          .values({
+            id,
+            sessionId: session.id,
+            goal: input.goal,
+            criteria: input.criteria,
+            stakeUsdcBaseUnits: stakeBase.toString(),
+            status: "draft",
+            expiresAt: input.expiresAt,
+            clientWalletId: walletId,
+            clientAddress: walletAddress,
+            providerWalletId: walletId,
+            providerAddress: walletAddress,
+          })
+          .run();
+        emit({ step: "draft-saved", data: { id } });
 
-    db.update(commitments)
-      .set({ status: "funded", updatedAt: new Date() })
-      .where(eq(commitments.id, id))
-      .run();
+        emit({ step: "createjob:pending" });
+        const created = await onChainCreateJob({
+          clientWalletId: walletId,
+          clientAddress: walletAddress,
+          providerAddress: walletAddress,
+          evaluatorAddress: evaluator.address,
+          expiredAtUnix: input.expiresAt,
+          description: `${input.goal}\n\nCriteria: ${input.criteria}`,
+        });
+        db.update(commitments)
+          .set({ jobId: Number(created.jobId), status: "open", updatedAt: new Date() })
+          .where(eq(commitments.id, id))
+          .run();
+        emit({
+          step: "createjob:done",
+          data: {
+            jobId: Number(created.jobId),
+            txHash: created.txHash,
+            explorer: created.explorer,
+          },
+        });
 
-    return NextResponse.json({ id, jobId: Number(created.jobId), status: "funded" });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "unknown error";
-    return NextResponse.json(
-      { id, error: "on-chain step failed", details: message },
-      { status: 500 },
-    );
-  }
+        emit({ step: "setbudget:pending" });
+        const setBudget = await onChainSetBudget({
+          providerWalletId: walletId,
+          jobId: created.jobId,
+          amountUsdcBaseUnits: stakeBase,
+        });
+        emit({ step: "setbudget:done", data: setBudget });
+
+        emit({ step: "approve:pending" });
+        const approve = await onChainApproveUsdc({
+          clientWalletId: walletId,
+          amountUsdcBaseUnits: stakeBase,
+        });
+        emit({ step: "approve:done", data: approve });
+
+        emit({ step: "fund:pending" });
+        const fund = await onChainFund({
+          clientWalletId: walletId,
+          jobId: created.jobId,
+        });
+        db.update(commitments)
+          .set({ status: "funded", updatedAt: new Date() })
+          .where(eq(commitments.id, id))
+          .run();
+        emit({ step: "fund:done", data: fund });
+
+        emit({ step: "complete", data: { id, jobId: Number(created.jobId) } });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "unknown error";
+        emit({ step: "error", data: { message } });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
+    },
+  });
 }
 
 export async function GET(): Promise<NextResponse> {
