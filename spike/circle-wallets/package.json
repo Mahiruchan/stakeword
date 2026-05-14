@@ -1,0 +1,20 @@
+{
+  "name": "stakeword-circle-wallets-spike",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal pattern for creating Circle Developer-Controlled Wallets on Arc testnet, with balance check.",
+  "scripts": {
+    "wallets:create": "tsx --env-file=.env src/create.ts",
+    "wallets:list": "tsx --env-file=.env src/list.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "^10.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
