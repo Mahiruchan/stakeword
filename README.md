@@ -66,11 +66,11 @@ cp apps/web/.env.example apps/web/.env
 # fill: CIRCLE_API_KEY, CIRCLE_ENTITY_SECRET, ARC_RPC_URL, LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
 
 # 3) Install + push schema
-npm install
-npm run db:push --workspace=web
+pnpm install
+pnpm --filter web db:push
 
 # 4) Run
-npm run dev --workspace=web
+pnpm dev
 # open http://localhost:3000
 ```
 

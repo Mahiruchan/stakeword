@@ -75,9 +75,9 @@ Next.js Server Components can read but not write cookies. Session creation needs
 cp .env.example .env
 # fill: CIRCLE_API_KEY, CIRCLE_ENTITY_SECRET, ARC_RPC_URL,
 #       LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
-npm install              # from monorepo root
-npm run db:push          # apply Drizzle schema to ./stakeword.db
-npm run dev              # http://localhost:3000
+pnpm install              # from monorepo root
+pnpm --filter web db:push # apply Drizzle schema to ./stakeword.db
+pnpm dev                  # http://localhost:3000
 ```
 
 If you don't have a Circle Entity Secret yet, run [`spike/circle-bootstrap`](../../spike/circle-bootstrap) — one command generates + registers it.
@@ -85,11 +85,11 @@ If you don't have a Circle Entity Secret yet, run [`spike/circle-bootstrap`](../
 ## Test
 
 ```sh
-npm run typecheck        # strict tsc --noEmit
-npm run build            # next build (turbopack)
+pnpm typecheck           # strict tsc --noEmit
+pnpm build               # next build (turbopack)
 ```
 
-No automated test suite yet. Manual smoke after `npm run dev`:
+No automated test suite yet. Manual smoke after `pnpm dev`:
 
 ```sh
 curl -c /tmp/c.txt http://localhost:3000/api/me           # session bootstrap
